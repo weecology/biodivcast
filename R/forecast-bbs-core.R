@@ -1,13 +1,4 @@
-library(forecast)
-library(dplyr)
-library(broom)
-library(MODISTools)
-library(DBI)
-library(ecoretriever)
-source("get_ndvi_data.R")
-source("get_prism_data.R")
-source("get_elev_data.R")
-
+#' @importFrom DBI dbClearResult dbFetch dbSendQuery dbConnect
 database_exists <- function(schema_name, con){
   # Check to see if a database exists
   res <- dbSendQuery(con, "SELECT schema_name FROM information_schema.schemata")
@@ -34,6 +25,7 @@ install_dataset <- function(dataset){
 #' @param df dataframe containing an species_id column
 #'
 #' @return dataframe, filtered version of initial dataframe
+#' @importFrom dplyr "%>%" inner_join do rowwise select filter group_by ungroup full_join n_distinct semi_join left_join
 filter_species <- function(df){
   species_table = get_species_data()
 
@@ -51,7 +43,7 @@ filter_species <- function(df){
     filter(aou != 7010)
 
   filter(df, species_id %in% valid_taxa$aou)
-}
+  }
 
 combine_subspecies = function(df){
 
@@ -97,6 +89,7 @@ get_species_data = function() {
   }
 }
 
+#' @export
 get_bbs_data <- function(start_yr, end_yr, min_num_yrs){
   # Get the BBS data
 
@@ -137,6 +130,7 @@ get_bbs_data <- function(start_yr, end_yr, min_num_yrs){
 #' Get combined environmental data
 #'
 #' Master function for acquiring all environmental in a single table
+#' @export
 get_env_data <- function(){
   bioclim_data <- get_bioclim_data()
   elev_data <- get_elev_data()
@@ -173,6 +167,7 @@ get_env_data <- function(){
 #' @param min_num_yrs num minimum number of years of data between start_yr & end_yr
 #'
 #' @return dataframe with site_id, lat, long, year, species_id, and abundance
+#' @export
 get_pop_ts_env_data <- function(start_yr, end_yr, min_num_yrs){
   bbs_data <- get_bbs_data(start_yr, end_yr, min_num_yrs)
   pop_ts_env_data <- bbs_data %>%
@@ -188,6 +183,7 @@ get_pop_ts_env_data <- function(start_yr, end_yr, min_num_yrs){
 #' @param min_num_yrs num minimum number of years of data between start_yr & end_yr
 #'
 #' @return dataframe with site_id, year, and richness
+#' @export
 get_richness_ts_env_data <- function(start_yr, end_yr, min_num_yrs){
   bbs_data <- get_bbs_data(start_yr, end_yr, min_num_yrs)
   richness_data <- bbs_data %>%
@@ -283,6 +279,7 @@ get_popdyn_data_w_zeros <- function(commdyn_data, start_year, stop_year) {
 #'   and cast_arima columns
 #'
 #' @return data.frame
+#' @export
 cleanup_multi_ts_forecasts <- function(ts_forecast_df, groups){
   cleaned <-
     ts_forecast_df %>%
@@ -329,6 +326,8 @@ cleanup_multi_ts_forecasts <- function(ts_forecast_df, groups){
 #'
 #' TODO: separate time-steps to hold out from fitting from time-steps to
 #'       forecast, since when not hindcasting these may be different
+#' @importFrom forecast auto.arima forecast meanf naive
+#' @export
 get_ts_forecasts <- function(grouped_tsdata, timecol, responsecol, lag = 1){
   do(grouped_tsdata,
      timeperiod = .[[timecol]][(length(.[[responsecol]]) - lag + 1):length(.[[responsecol]])],
@@ -339,6 +338,7 @@ get_ts_forecasts <- function(grouped_tsdata, timecol, responsecol, lag = 1){
   )
 }
 
+#' @export
 get_error_measures <- function(obs, pred){
   error <- obs - pred
   percenterror <- error / obs * 100
