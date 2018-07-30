@@ -1,10 +1,12 @@
 name: bbs-forecasting
 channels:
   - r
+  - conda-forge
 dependencies:
   - r
   - python=3
   - jupyter
+  - retriever
   - r-dplyr
   - r-forecast
   - r-devtools
