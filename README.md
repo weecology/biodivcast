@@ -12,7 +12,7 @@ development releases, and the Jupyter Notebook.
 If you don't have Jupyter Notebook installed already we recommend installing the
 [Anaconda Python distribution](https://www.continuum.io/downloads) to get it.
 
-Running `install-packages.R` should make sure all of the relevant packages are
+Running `install.R` should make sure all of the relevant packages are
 installed including Jupyter Notebook integration. It will not re-install
 packages that you already have thanks to
 [pacman](https://github.com/trinker/pacman).
